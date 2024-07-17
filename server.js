@@ -1,68 +1,31 @@
-const http = require("http");
+const express = require("express");
+const app=express();
+app.use(express.json());
+
 const port = 8081;// local port number
 
 const toDoList=["learn","apply", "things","succed"];
 
-http
-    .createServer((req,res) => {
-    const {method,url}=req;
-    // console.log(method,url);
-    if (url === "/todos"){
-        if (method === "GET"){
-            res.writeHead(200,{"content-Type":"text/html"});
-            res.write(toDoList.toString());
-        }else if(method ==="POST"){
-            let body="";
-            req.on('error',(err) => {
-                console.log(err)
-            }).on('data',(chunk)=>{
-                body += chunk;
-                // console.log(chunk);
-            }).on('end',()=>{
-                body = JSON.parse(body);
-                let newToDo=toDoList;
-                newToDo.push(body.item);
-                console.log(newToDo);
-                // console.log('data:',body);
-            })
-        } else if(method === "DELETE"){
-            let body="";
-            req
-            .on ("error",(err) => {
-                console.log(err);
-            })
-            .on ("data",(chunk)=>{
-                body +=chunk;
-            })
-            .on("end",()=>{
-                body = JSON.parse(body);
+app.get("/todos",(req,res) => {
+    res.status(200).send(toDoList);
+});
 
-                let deleteThisItem = body.item;
+app.post("/todos",(req,res) => {
+    let newToDoList=req.body.name;
+    toDoList.push(newToDoList);
+    res.status(201).send({message : "TAsk Added Successfully"});
+});
 
-                for(let i=0;i<=toDoList.length;i++){
-                    if (toDoList[i] === deleteThisItem) {
-                        toDoList.splice(i,1);
-                        break;
-                    }else{
-                        console.error("Error: Match Not  Found!!");
-                        break;
-                    }
-                    }
-            });
+app.delete("/todos",(req,res) => {
+    const deleteThisItem=req.body.name;
+    toDoList.find((elem,index) => {
+        if (elem == deleteThisItem){
+            toDoList.splice(index,1);
         }
-        
-        
-        else{
-            res.writeHead(501);
+        res.status(202).send({message : `Deleted item ${req.body.name}`});
+    });
+});
 
-        }
-    }else{
-        res.writeHead(404);
-    }
-    // res.writeHead(200,{"content-Type":"text/html"});
-    // res.write("<h2>Hey server started:-)</h2>");
-    res.end();
-})
-.listen(port,()=>{ //call back function
-    console.log('Node Js Server Sarted Running on port ');
+app.listen(port,()=>{
+    console.log(`Node Server started running on port ${port}`);
 });
